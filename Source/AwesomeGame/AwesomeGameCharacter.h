@@ -48,6 +48,11 @@ class AWESOMEGAME_API AAwesomeGameCharacter : public APaperCharacter
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Default)
+	float DamageImpulseX;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Default)
+	float DamageImpulseZ;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Default)
 	float currentHealth;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Default)

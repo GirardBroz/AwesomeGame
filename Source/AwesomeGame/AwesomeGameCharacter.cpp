@@ -55,6 +55,10 @@ AAwesomeGameCharacter::AAwesomeGameCharacter()
 
 	// Set full life
 	currentHealth = 1.0f;
+
+	// Some default values for the knockback when the character takes damage
+	DamageImpulseX = 20000.0f;
+	DamageImpulseZ = 20000.0f;
 }
 
 void AAwesomeGameCharacter::SetupPlayerInputComponent(class UInputComponent* InputComponent)
@@ -161,7 +165,7 @@ float AAwesomeGameCharacter::TakeDamage(float Damage, struct FDamageEvent const&
 		// Check if the character is dead and deal with it if needed
 		CheckDead();
 
-		GetCharacterMovement()->AddImpulse(FVector(Facing*90000.0f, 0.0f, 90000.0f));
+		GetCharacterMovement()->AddImpulse(FVector(Facing*DamageImpulseX, 0.0f, DamageImpulseZ));
 
 		isHit = true;
 	}
