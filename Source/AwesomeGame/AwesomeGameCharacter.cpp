@@ -27,7 +27,7 @@ AAwesomeGameCharacter::AAwesomeGameCharacter()
 	// Create an orthographic camera (no perspective) and attach it to the boom
 	SideViewCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("SideViewCamera"));
 	SideViewCameraComponent->ProjectionMode = ECameraProjectionMode::Orthographic;
-	SideViewCameraComponent->OrthoWidth = 1600.0f;
+	SideViewCameraComponent->OrthoWidth = 2000.0f;
 	SideViewCameraComponent->AttachTo(CameraBoom, USpringArmComponent::SocketName);
 
 	// Prevent all automatic rotation behavior on the camera, character, and camera component
@@ -43,6 +43,13 @@ AAwesomeGameCharacter::AAwesomeGameCharacter()
 	// Note: This can cause a little floating when going up inclines; you can choose the tradeoff between better
 	// behavior on the edge of a ledge versus inclines by setting this to true or false
 	GetCharacterMovement()->bUseFlatBaseForFloorChecks = true;
+
+	// Tweak character movement according to our needs
+	GetCharacterMovement()->GravityScale = 3.0f;
+	GetCharacterMovement()->MaxAcceleration = 5000.0f;
+	GetCharacterMovement()->SetWalkableFloorAngle(45.0f);
+	GetCharacterMovement()->JumpZVelocity = 1200.0f;
+	GetCharacterMovement()->BrakingDecelerationFalling = 1000.0f;
 
 	// Enable replication on the Sprite component so animations show up when networked
 	GetSprite()->SetIsReplicated(true);
