@@ -12,7 +12,8 @@ enum class EStateEnum :uint8{
 		Running,
 		Jumping,
 		Shooting,
-		Hit
+		Hit,
+		Dead
 };
 
 // Create the structure used to attach States to Flipbooks
@@ -33,7 +34,7 @@ struct AWESOMEGAME_API FStateFlipbookStruct
  * We setup the minimum required to extend it in Blueprint and finish it there.
  * THIS CLASS SHOULD NOT BE USED DIRECTLY HAS THE DEFAULTPAWNCLASS
  */
-UCLASS(config=Game)
+UCLASS(config=Game, Abstract)
 class AWESOMEGAME_API AAwesomeGameCharacter : public APaperCharacter
 {
 	GENERATED_BODY()
@@ -47,38 +48,54 @@ class AWESOMEGAME_API AAwesomeGameCharacter : public APaperCharacter
 	class USpringArmComponent* CameraBoom;
 
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Default)
+	/** EXPOSED PROPERTIES AND METHODS **/
+
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Default)
 	float DamageImpulseX;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Default)
-	float DamageImpulseZ;
+	float DamageImpulseZ;*/
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Default)
-	float currentHealth;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Default)
+	float CurrentHealth;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Default)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Default)
 	EStateEnum CurrentState;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Default)
 	TArray<FStateFlipbookStruct> StateFlipbookArray;
 
 	// The following variables are self-explanatory and used for the State machine
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Default)
-	bool isJumping;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Default)
-	bool isRunning;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Default)
-	bool isHit;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Default)
-	bool isDead;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Character)
+	bool bIsJumping;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Character)
+	bool bIsRunning;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Character)
+	bool bIsHit;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Character)
+	bool bIsDead;
+
+	// Updates the animation of the character
+	UFUNCTION(BlueprintCallable, Category = Default)
+	void UpdateAnimation();
+
+	// StateMachine
+	UFUNCTION(BlueprintCallable, Category = Default)
+	EStateEnum StateMachine();
+
+	// Returns the Flipbook associated to a State via the Struct
+	UFUNCTION(BlueprintCallable, Category = Default)
+	UPaperFlipbook* GetFlipbookForState(EStateEnum State);
+
+	// Event called when the player dies
+	UFUNCTION(BlueprintImplementableEvent, Category = Character)
+	void OnDied();
+
+	/** NON EXPOSED METHODS AND PROPERTIES **/
 
 	// Represents the direction the character is facing, 1 = right, -1 = left
 	int Facing;
-
-	// APawn interface
-	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
-	// End of APawn interface
 	
-	// Override TakeDamage
+	// Override TakeDamage event
 	float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser);
 
 	// Override the OnLanded event
@@ -93,18 +110,9 @@ protected:
 	// Checks if the character is dead and deals with it.
 	bool CheckDead();
 
-	// Updates the animation of the character
-	UFUNCTION(BlueprintCallable, Category = Default)
-	void UpdateAnimation();
-
-	// StateMachine
-	UFUNCTION(BlueprintCallable, Category = Default)
-	EStateEnum StateMachine();
-
-	// Returns the Flipbook associated to a State via the Struct
-	UFUNCTION(BlueprintCallable, Category = Default)
-	UPaperFlipbook* GetFlipbookForState(EStateEnum State);
-
+	// APawn interface
+	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
+	// End of APawn interface
 public:
 	AAwesomeGameCharacter();
 	

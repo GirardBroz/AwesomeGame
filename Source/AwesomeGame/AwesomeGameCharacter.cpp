@@ -56,16 +56,16 @@ AAwesomeGameCharacter::AAwesomeGameCharacter()
 	bReplicates = true;
 
 	// Set the default states
-	isJumping = false;
-	isRunning = false;
-	isDead = false;
+	bIsJumping = false;
+	bIsRunning = false;
+	bIsDead = false;
 
 	// Set full life
-	currentHealth = 1.0f;
+	CurrentHealth = 1.0f;
 
 	// Some default values for the knockback when the character takes damage
-	DamageImpulseX = 20000.0f;
-	DamageImpulseZ = 20000.0f;
+	/*DamageImpulseX = 20000.0f;
+	DamageImpulseZ = 20000.0f;*/
 }
 
 void AAwesomeGameCharacter::SetupPlayerInputComponent(class UInputComponent* InputComponent)
@@ -83,18 +83,18 @@ void AAwesomeGameCharacter::MoveRight(float Value)
 		if (Value > 0)
 		{
 			Controller->SetControlRotation(FRotator(0.0f, 0.0f, 0.0f));
-			isRunning = true;
+			bIsRunning = true;
 			Facing = -1;
 		}
 		else if (Value < 0)
 		{
 			Controller->SetControlRotation(FRotator(0.0f, 180.0f, 0.0f));
-			isRunning = true;
+			bIsRunning = true;
 			Facing = 1;
 		}
 		else
 		{
-			isRunning = false;
+			bIsRunning = false;
 		}
 	}
 
@@ -108,17 +108,17 @@ void AAwesomeGameCharacter::MoveRight(float Value)
 void AAwesomeGameCharacter::Jump()
 {
 	Super::Jump();
-	isJumping = true;
+	bIsJumping = true;
 }
 
 void AAwesomeGameCharacter::Landed(const FHitResult& Hit){
 	Super::Landed(Hit);
-	isJumping = false;
+	bIsJumping = false;
 
 	// The player landed from a damage-induced knockback, he's not hurt anymore
-	if (isHit)
+	if (bIsHit)
 	{
-		isHit = false;
+		bIsHit = false;
 	}
 }
 
@@ -129,10 +129,8 @@ void AAwesomeGameCharacter::UpdateAnimation()
 
 UPaperFlipbook* AAwesomeGameCharacter::GetFlipbookForState(EStateEnum State)
 {
-	FStateFlipbookStruct LoopState;
-	for (int32 b = 0; b < StateFlipbookArray.Num(); b++)
+	for (auto& LoopState : StateFlipbookArray)
 	{
-		LoopState = StateFlipbookArray[b];
 		if (LoopState.State == State)
 		{
 			return LoopState.Flipbook;
@@ -143,15 +141,19 @@ UPaperFlipbook* AAwesomeGameCharacter::GetFlipbookForState(EStateEnum State)
 
 EStateEnum AAwesomeGameCharacter::StateMachine()
 {
-	if (isHit)
+	if (bIsDead)
+	{
+		CurrentState = EStateEnum::Dead;
+	}
+	else if (bIsHit)
 	{
 		CurrentState = EStateEnum::Hit;
 	}
-	else if (isJumping)
+	else if (bIsJumping)
 	{
 		CurrentState = EStateEnum::Jumping;
 	}
-	else if (isRunning)
+	else if (bIsRunning)
 	{
 		CurrentState = EStateEnum::Running;
 	}
@@ -168,13 +170,14 @@ float AAwesomeGameCharacter::TakeDamage(float Damage, struct FDamageEvent const&
 	const float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 	if (ActualDamage > 0.f)
 	{
-		currentHealth -= ActualDamage;
+		CurrentHealth -= ActualDamage;
 		// Check if the character is dead and deal with it if needed
 		CheckDead();
 
-		GetCharacterMovement()->AddImpulse(FVector(Facing*DamageImpulseX, 0.0f, DamageImpulseZ));
+		// Impulse the character back to mark that he took damage
+		//GetCharacterMovement()->AddImpulse(FVector(Facing*DamageImpulseX, 0.0f, DamageImpulseZ));
 
-		isHit = true;
+		bIsHit = true;
 	}
 
 	return ActualDamage;
@@ -182,14 +185,17 @@ float AAwesomeGameCharacter::TakeDamage(float Damage, struct FDamageEvent const&
 
 bool AAwesomeGameCharacter::CheckDead()
 {
-	if (currentHealth <= 0.0f)
+	if (CurrentHealth <= 0.0f)
 	{
-		isDead = true;
+		bIsDead = true;
 		DisableInput((APlayerController*)Controller);
+
+		// Call the Blueprint event OnDied in case we want some fancy stuff to happen in BP when the char dies
+		OnDied();
 	}
 	else {
-		isDead = false;
+		bIsDead = false;
 	}
 
-	return isDead;
+	return bIsDead;
 }
